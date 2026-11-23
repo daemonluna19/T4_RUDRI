@@ -20,9 +20,17 @@ public class mesaModel {
 
     @Column(name = "numero", nullable = false)
     private Integer numero;
+        @Column(name = "nombre", length = 60)
+    private String nombre;
 
     @Column(name = "capacidad")
     private Integer capacidad;
+      @Column(name = "numero_personas")
+    private Integer numeroPersonas = 0;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", nullable = false)
+    private EstadoMesa estado = EstadoMesa.LIBRE;
 
     @Column(name = "activa", nullable = false)
     private Boolean activa = true;
@@ -35,6 +43,22 @@ public class mesaModel {
 
     public Integer getIdMesa() {
         return idMesa;
+    }
+
+    public Integer getNumeroPersonas() {
+        return numeroPersonas;
+    }
+
+    public void setNumeroPersonas(Integer numeroPersonas) {
+        this.numeroPersonas = numeroPersonas;
+    }
+
+    public EstadoMesa getEstado() {
+        return estado;
+    }
+
+    public void setEstado(EstadoMesa estado) {
+        this.estado = estado;
     }
 
     public void setIdMesa(Integer idMesa) {
@@ -63,5 +87,13 @@ public class mesaModel {
 
     public void setActiva(Boolean activa) {
         this.activa = activa;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
     }
 }
