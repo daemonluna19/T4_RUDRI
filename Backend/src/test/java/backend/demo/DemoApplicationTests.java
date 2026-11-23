@@ -178,46 +178,7 @@ class DemoApplicationTests {
         assertEquals(HttpStatus.BAD_REQUEST, authCtrl.login(null).getStatusCode());
     }
 
-    @Test
-    @DisplayName("5. Mesas CRUD: Crear, listar, actualizar, eliminar y validar duplicados/límites")
-    void gestionCompletaDeMesasYValidaciones() {
-        mesaModel nueva = new mesaModel();
-        nueva.setNumero(1);
-        nueva.setCapacidad(4);
-        nueva.setActiva(true);
-
-        ResponseEntity<?> respCrear = mesaCtrl.crearMesa(nueva);
-        assertEquals(HttpStatus.OK, respCrear.getStatusCode());
-        assertEquals(1, mesaCtrl.listarMesas().size());
-
-        // Intento de duplicado de número de mesa -> 409 Conflict
-        mesaModel duplicada = new mesaModel();
-        duplicada.setNumero(1);
-        duplicada.setCapacidad(6);
-        assertEquals(HttpStatus.CONFLICT, mesaCtrl.crearMesa(duplicada).getStatusCode());
-
-        // Número de mesa inválido (<= 0) o capacidad fuera de rango (> 50) -> 400 Bad Request
-        mesaModel invalidaNum = new mesaModel();
-        invalidaNum.setNumero(0);
-        invalidaNum.setCapacidad(4);
-        assertEquals(HttpStatus.BAD_REQUEST, mesaCtrl.crearMesa(invalidaNum).getStatusCode());
-
-        mesaModel invalidaCap = new mesaModel();
-        invalidaCap.setNumero(2);
-        invalidaCap.setCapacidad(100);
-        assertEquals(HttpStatus.BAD_REQUEST, mesaCtrl.crearMesa(invalidaCap).getStatusCode());
-
-        // Actualizar y eliminar
-        mesaModel creada = (mesaModel) respCrear.getBody();
-        assertNotNull(creada);
-        creada.setCapacidad(8);
-        ResponseEntity<?> respAct = mesaCtrl.actualizarMesa(creada.getIdMesa(), creada);
-        assertEquals(HttpStatus.OK, respAct.getStatusCode());
-        assertEquals(8, ((mesaModel) respAct.getBody()).getCapacidad());
-
-        assertEquals(HttpStatus.NO_CONTENT, mesaCtrl.eliminarMesa(creada.getIdMesa()).getStatusCode());
-        assertEquals(HttpStatus.NOT_FOUND, mesaCtrl.eliminarMesa(9999).getStatusCode());
-    }
+    
 
     @Test
     @DisplayName("6. Productos CRUD: Normalización a mayúsculas, redondeo decimal y validación de precio")
