@@ -25,6 +25,14 @@ export class AuthService {
 
   readonly estaAutenticado = computed(() => this.usuarioActual() !== null);
 
+  tieneRol(...rolesPermitidos: string[]): boolean {
+    const user = this.usuarioActual();
+    if (!user) return false;
+    if (!rolesPermitidos || rolesPermitidos.length === 0) return true;
+    const rolActual = (user.rol || '').toUpperCase();
+    return rolesPermitidos.some((r) => r.toUpperCase() === rolActual);
+  }
+
   private readonly usuariosFallback: Array<LoginResponse & { clave: string }> = [
     {
       idUsuario: 1,
@@ -100,7 +108,8 @@ export class AuthService {
           nombreCompleto: encontrado.nombreCompleto,
           nombreUsuario: encontrado.nombreUsuario,
           rol: encontrado.rol,
-          mensaje: encontrado.mensaje
+          mensaje: encontrado.mensaje,
+          token: btoa(`${encontrado.nombreUsuario}:${encontrado.rol}:fallback`)
         };
         this.guardarSesion(respuesta);
         return of(respuesta);

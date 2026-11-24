@@ -161,6 +161,13 @@ describe('RUDRI Frontend - Pruebas Unitarias', () => {
       authGuard({} as never, {} as never)
     );
     expect(resultadoPermitido).toBe(true);
+
+    // Restricción por rol: un MOZO intentando entrar a una ruta exclusiva de ADMINISTRADOR (/crud) es redirigido a /mesas
+    const resultadoRolRestringido = TestBed.runInInjectionContext(() =>
+      authGuard({ data: { roles: ['ADMINISTRADOR'] } } as never, {} as never)
+    );
+    expect(resultadoRolRestringido instanceof UrlTree).toBe(true);
+    expect((resultadoRolRestringido as UrlTree).toString()).toBe('/mesas');
   });
 
   it('7. LoginComponent debería redirigir según el rol del usuario (MOZO -> /mesas, COCINA -> /cocina, ADMIN -> /crud)', () => {

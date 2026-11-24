@@ -1,11 +1,17 @@
 package backend.demo;
 
 import backend.demo.controller.authController;
+import backend.demo.controller.categoriaController;
 import backend.demo.controller.mesaController;
 import backend.demo.controller.pedidoController;
 import backend.demo.controller.productoController;
+import backend.demo.controller.usuarioController;
+import backend.demo.dto.MesaResponse;
+import backend.demo.dto.OcuparMesaRequest;
 import backend.demo.dto.loginRequest;
+import backend.demo.model.EstadoMesa;
 import backend.demo.model.categoriaModel;
+import backend.demo.model.detallePedidoModel;
 import backend.demo.model.mesaModel;
 import backend.demo.model.pedidoModel;
 import backend.demo.model.productoModel;
@@ -50,6 +56,12 @@ class DemoApplicationTests {
 
     @Autowired
     private pedidoController pedidoCtrl;
+
+    @Autowired
+    private categoriaController categoriaCtrl;
+
+    @Autowired
+    private usuarioController usuarioCtrl;
 
     @Autowired
     private usuarioRepository usuarioRepo;
@@ -135,6 +147,7 @@ class DemoApplicationTests {
         assertEquals("Inicio de sesión exitoso", body.get("mensaje"));
         assertEquals("mozo01", body.get("nombreUsuario"));
         assertEquals("MOZO", body.get("rol"));
+        assertNotNull(body.get("token"));
     }
 
     @Test
@@ -178,7 +191,97 @@ class DemoApplicationTests {
         assertEquals(HttpStatus.BAD_REQUEST, authCtrl.login(null).getStatusCode());
     }
 
-    
+    @Test
+    @DisplayName("5. Mesas CRUD y Ocupación: Crear, listar, ocupar, liberar, actualizar, eliminar y validar duplicados/límites")
+    void gestionCompletaDeMesasYValidaciones() {
+        mesaModel nueva = new mesaModel();
+        nueva.setNumero(1);
+        nueva.setCapacidad(4);
+        nueva.setActiva(true);
+
+        ResponseEntity<?> respCrear = mesaCtrl.crearMesa(nueva);
+        assertEquals(HttpStatus.OK, respCrear.getStatusCode());
+        assertEquals(1, mesaCtrl.listarMesas().size());
+
+        // Intento de duplicado de número de mesa -> 409 Conflict
+        mesaModel duplicada = new mesaModel();
+        duplicada.setNumero(1);
+        duplicada.setCapacidad(6);
+        assertEquals(HttpStatus.CONFLICT, mesaCtrl.crearMesa(duplicada).getStatusCode());
+
+        // Número de mesa inválido (<= 0) o capacidad fuera de rango (> 50) -> 400 Bad Request
+        mesaModel invalidaNum = new mesaModel();
+        invalidaNum.setNumero(0);
+        invalidaNum.setCapacidad(4);
+        assertEquals(HttpStatus.BAD_REQUEST, mesaCtrl.crearMesa(invalidaNum).getStatusCode());
+
+        mesaModel invalidaCap = new mesaModel();
+        invalidaCap.setNumero(2);
+        invalidaCap.setCapacidad(100);
+        assertEquals(HttpStatus.BAD_REQUEST, mesaCtrl.crearMesa(invalidaCap).getStatusCode());
+
+        mesaModel creada = (mesaModel) respCrear.getBody();
+        assertNotNull(creada);
+
+        // Ocupar y liberar mesa
+        MesaResponse ocupada = mesaCtrl.ocuparMesa(creada.getIdMesa(), new OcuparMesaRequest("Familia Gómez", 3));
+        assertEquals(EstadoMesa.OCUPADA, ocupada.estado());
+        assertEquals(3, ocupada.numeroPersonas());
+
+        MesaResponse liberada = mesaCtrl.liberarMesa(creada.getIdMesa());
+        assertEquals(EstadoMesa.LIBRE, liberada.estado());
+        assertEquals(0, liberada.numeroPersonas());
+
+        // Actualizar y eliminar
+        creada.setCapacidad(8);
+        ResponseEntity<?> respAct = mesaCtrl.actualizarMesa(creada.getIdMesa(), creada);
+        assertEquals(HttpStatus.OK, respAct.getStatusCode());
+        assertEquals(8, ((mesaModel) respAct.getBody()).getCapacidad());
+
+        assertEquals(HttpStatus.NO_CONTENT, mesaCtrl.eliminarMesa(creada.getIdMesa()).getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, mesaCtrl.eliminarMesa(9999).getStatusCode());
+    }
+
+    @Test
+    @DisplayName("8. Categorías, Usuarios y Detalle de Pedido: CRUD y persistencia de ítems")
+    void gestionDeCategoriasUsuariosYDetallesDePedido() {
+        // Categorías CRUD
+        categoriaModel nuevaCat = new categoriaModel();
+        nuevaCat.setNombre("  bebidas  ");
+        nuevaCat.setDescripcion("Refrescos y jarras");
+        ResponseEntity<?> respCat = categoriaCtrl.crearCategoria(nuevaCat);
+        assertEquals(HttpStatus.OK, respCat.getStatusCode());
+        assertEquals(HttpStatus.CONFLICT, categoriaCtrl.crearCategoria(nuevaCat).getStatusCode());
+
+        // Usuarios CRUD
+        ResponseEntity<?> respUser = usuarioCtrl.crearUsuario(Map.of(
+                "nombreCompleto", "Chef Roberto",
+                "nombreUsuario", "cocina01",
+                "clave", "Cocina12345",
+                "rol", "COCINA"
+        ));
+        assertEquals(HttpStatus.OK, respUser.getStatusCode());
+        assertTrue(usuarioCtrl.listarUsuarios().size() >= 3);
+
+        // Pedido con detalles
+        detallePedidoModel item = new detallePedidoModel();
+        item.setIdProducto(1);
+        item.setNombreProducto("CEVICHE CLÁSICO");
+        item.setCantidad(2);
+        item.setPrecioUnitario(new BigDecimal("28.00"));
+
+        pedidoModel pedidoConDetalle = new pedidoModel();
+        pedidoConDetalle.setIdMesa(2);
+        pedidoConDetalle.setDetalles(java.util.List.of(item));
+
+        ResponseEntity<?> respPedido = pedidoCtrl.crearPedido(pedidoConDetalle);
+        assertEquals(HttpStatus.OK, respPedido.getStatusCode());
+        pedidoModel pedidoGuardado = (pedidoModel) respPedido.getBody();
+        assertNotNull(pedidoGuardado);
+        assertEquals(2, pedidoGuardado.getTotalArticulos());
+        assertEquals(new BigDecimal("56.00"), pedidoGuardado.getTotalMonto());
+        assertEquals(1, pedidoGuardado.getDetalles().size());
+    }
 
     @Test
     @DisplayName("6. Productos CRUD: Normalización a mayúsculas, redondeo decimal y validación de precio")
