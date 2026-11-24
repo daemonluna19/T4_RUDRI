@@ -23,24 +23,10 @@ export class MesasComponent implements OnInit {
   private readonly mesasDemo = signal<Mesa[]>([]);
 
   readonly mesaService = {
-   mesas: computed(() => {
-  const mesasReales = this.mesasApi.mesas();
-  const mesas = mesasReales.length > 0 ? mesasReales : this.mesasDemo();
-
-  const mesasConPedidoActivo = new Set(
-    this.pedidoService.pedidosPendientesCocina().map((pedido) => pedido.idMesa)
-  );
-  return mesas.map((mesa) => {
-    if (!mesasConPedidoActivo.has(mesa.idMesa)) return mesa;
-
-    const codigo = mesa.codigoFormateado ?? `MESA ${mesa.numero}`;
-    return {
-      ...mesa,
-      codigoFormateado: `${codigo} · OCUPADA`,
-      activa: false
-    };
-  });
-})
+    mesas: computed(() => {
+      const mesas = this.mesasApi.mesas();
+      return mesas.length > 0 ? mesas : this.mesasDemo();
+    })
   };
 
   ngOnInit(): void {
