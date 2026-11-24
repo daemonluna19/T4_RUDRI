@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { RudriHeaderComponent } from '../../components/rudri-header/rudri-header.component';
@@ -15,15 +16,41 @@ import { Mesa } from '../../models/mesa.model';
   styleUrl: './mesas.component.css'
 })
 export class MesasComponent implements OnInit {
-  readonly mesaService = inject(MesaService);
   readonly pedidoService = inject(PedidoService);
   private readonly router = inject(Router);
+  private readonly mesasApi = inject(MesaService);
+  private readonly http = inject(HttpClient);
+  private readonly mesasDemo = signal<Mesa[]>([]);
+
+  readonly mesaService = {
+    mesas: computed(() => {
+      const mesas = this.mesasApi.mesas();
+      return mesas.length > 0 ? mesas : this.mesasDemo();
+    })
+  };
 
   ngOnInit(): void {
-    this.mesaService.listarMesas().subscribe();
+    this.mesasApi.listarMesas().subscribe(() => {
+      if (this.mesasApi.mesas().length > 0) return;
+
+      this.http.get<Mesa[]>('/mock/mesas.json').subscribe({
+        next: (mesas) => {
+          this.mesasDemo.set(
+           mesas.map((mesa) => ({
+  ...mesa,
+  idMesa: -Math.abs(mesa.idMesa),
+  activa: true
+}))
+          );
+        },
+        error: () => this.mesasDemo.set([])
+      });
+    });
   }
 
   elegirMesa(mesa: Mesa): void {
+    if (!mesa.activa) return;
+
     this.pedidoService.seleccionarMesa(mesa);
     this.router.navigate(['/menu']);
   }
