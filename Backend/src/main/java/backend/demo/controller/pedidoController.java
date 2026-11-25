@@ -40,6 +40,30 @@ public class pedidoController {
                 Map.of("mensaje", "Debes seleccionar una mesa antes de enviar el pedido.")
             );
         }
+
+        if (nuevo.getDetalles() != null && !nuevo.getDetalles().isEmpty()) {
+            int sumaCantidad = 0;
+            BigDecimal sumaMonto = BigDecimal.ZERO;
+            for (var item : nuevo.getDetalles()) {
+                int cant = item.getCantidad() != null && item.getCantidad() > 0 ? item.getCantidad() : 1;
+                item.setCantidad(cant);
+                BigDecimal precioUnit = item.getPrecioUnitario() != null ? item.getPrecioUnitario() : BigDecimal.ZERO;
+                item.setPrecioUnitario(precioUnit);
+                BigDecimal sub = item.getSubtotal() != null && item.getSubtotal().compareTo(BigDecimal.ZERO) > 0
+                        ? item.getSubtotal()
+                        : precioUnit.multiply(BigDecimal.valueOf(cant));
+                item.setSubtotal(sub);
+                sumaCantidad += cant;
+                sumaMonto = sumaMonto.add(sub);
+            }
+            if (nuevo.getTotalArticulos() == null || nuevo.getTotalArticulos() <= 0) {
+                nuevo.setTotalArticulos(sumaCantidad);
+            }
+            if (nuevo.getTotalMonto() == null || nuevo.getTotalMonto().compareTo(BigDecimal.ZERO) <= 0) {
+                nuevo.setTotalMonto(sumaMonto);
+            }
+        }
+
         if (nuevo.getTotalArticulos() == null || nuevo.getTotalArticulos() <= 0) {
             return ResponseEntity.badRequest().body(
                 Map.of("mensaje", "Agrega al menos un plato o bebida al pedido.")

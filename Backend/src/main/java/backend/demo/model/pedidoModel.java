@@ -3,6 +3,8 @@ package backend.demo.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "pedido")
@@ -42,6 +44,10 @@ public class pedidoModel {
 
     @Column(name = "total_monto", precision = 10, scale = 2, nullable = false)
     private BigDecimal totalMonto = BigDecimal.ZERO;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_pedido")
+    private List<detallePedidoModel> detalles = new ArrayList<>();
 
     public pedidoModel() {
     }
@@ -145,5 +151,13 @@ public class pedidoModel {
 
     public void setTotalMonto(BigDecimal totalMonto) {
         this.totalMonto = totalMonto;
+    }
+
+    public List<detallePedidoModel> getDetalles() {
+        return detalles;
+    }
+
+    public void setDetalles(List<detallePedidoModel> detalles) {
+        this.detalles = detalles != null ? detalles : new ArrayList<>();
     }
 }

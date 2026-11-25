@@ -17,6 +17,7 @@ export interface LoginResponse {
   nombreCompleto: string;
   nombreUsuario: string;
   rol: NombreRol | string;
+  token?: string;
 }
 
 export interface Usuario {

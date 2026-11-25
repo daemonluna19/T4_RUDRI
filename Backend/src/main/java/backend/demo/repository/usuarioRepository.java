@@ -15,4 +15,10 @@ public interface usuarioRepository extends JpaRepository<usuarioModel, Integer> 
     @EntityGraph(attributePaths = {"rol"})
     Optional<usuarioModel> findByNombreUsuarioAndActivoTrue(String nombreUsuario);
 
+    @Override
+    @EntityGraph(attributePaths = {"rol"})
+    java.util.List<usuarioModel> findAll();
+
+    boolean existsByNombreUsuarioIgnoreCase(String nombreUsuario);
+
 }

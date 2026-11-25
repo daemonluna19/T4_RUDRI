@@ -6,7 +6,10 @@ import backend.demo.services.usuarioServices;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -51,13 +54,18 @@ public class authController {
                 ? usuario.getRol().getNombre()
                 : "MOZO";
 
+        String payloadToken = usuario.getNombreUsuario() + ":" + nombreRol + ":" + UUID.randomUUID();
+        String token = Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(payloadToken.getBytes(StandardCharsets.UTF_8));
+
         return ResponseEntity.ok(
             Map.of(
                 "mensaje", "Inicio de sesión exitoso",
                 "idUsuario", usuario.getIdUsuario() != null ? usuario.getIdUsuario() : 0,
                 "nombreCompleto", usuario.getNombreCompleto() != null ? usuario.getNombreCompleto() : "",
                 "nombreUsuario", usuario.getNombreUsuario(),
-                "rol", nombreRol
+                "rol", nombreRol,
+                "token", token
             )
         );
     }
