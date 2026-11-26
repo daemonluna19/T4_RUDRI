@@ -18,6 +18,35 @@
   margin-bottom: 1.25rem;
 }
 
+.estado-mesa {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.estado-mesa.libre {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.estado-mesa.ocupada {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.estado-mesa.inactiva {
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
+.actions-cell button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+
 .crud-top h1 {
   margin: 0;
   font-size: 1.4rem;

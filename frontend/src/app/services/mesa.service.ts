@@ -12,7 +12,7 @@ const STORAGE_MESAS = 'rudri_mesas_data';
 })
 export class MesaService {
   private readonly http = inject(HttpClient);
-
+private readonly apiUrl = 'http://localhost:8080/api/mesas';
   readonly mesas = signal<Mesa[]>(this.cargarMesasLocales());
 
   formatearCodigoMesa(numero: number): string {
@@ -33,19 +33,29 @@ export class MesaService {
     return null;
   }
 
-  private obtenerMesasIniciales(): Mesa[] {
-    const capacidades: Record<number, number> = { 5: 6, 8: 6, 11: 8 };
-    return Array.from({ length: 12 }, (_, idx) => {
-      const numero = idx + 1;
-      return {
-        idMesa: numero,
-        numero,
-        codigoFormateado: this.formatearCodigoMesa(numero),
-        capacidad: capacidades[numero] ?? 4,
-        activa: true
-      };
-    });
-  }
+private obtenerMesasIniciales(): Mesa[] {
+  const capacidades: Record<number, number> = {
+    5: 6,
+    8: 6,
+    11: 8
+  };
+
+  return Array.from({ length: 12 }, (_, idx) => {
+    const numero = idx + 1;
+
+    return {
+      idMesa: numero,
+      numero,
+      codigoFormateado: this.formatearCodigoMesa(numero),
+      nombre: `Mesa ${numero}`,
+      capacidad: capacidades[numero] ?? 4,
+      numeroPersonas: 0,
+      estado: 'LIBRE',
+      activa: true,
+      ocupada: false
+    };
+  });
+}
 
   private cargarMesasLocales(): Mesa[] {
     try {
@@ -78,36 +88,95 @@ export class MesaService {
       catchError(() => of(this.mesas()))
     );
   }
+    ocuparMesa(
+  id: number,
+  datos: { nombre: string; numeroPersonas: number }
+): Observable<Mesa> {
 
-  crearMesa(nueva: Omit<Mesa, 'idMesa'>): Observable<Mesa> {
-    const num = Number(nueva?.numero);
-    const cap = Number(nueva?.capacidad ?? 4);
-    const errorValidacion = this.validarDatosMesa(num, cap);
-    if (errorValidacion) {
-      return throwError(() => new Error(errorValidacion));
+  return this.http.put<Mesa>(
+    `${this.apiUrl}/${id}/ocupar`,
+    datos
+  );
+}
+    librarMesa(id: number) {
+      return this.http.put<Mesa>(
+        '${this.apiUrl}/${id}/librar', {});
     }
 
-    return this.http.post<Mesa>(API_CONFIG.endpoints.mesas, nueva).pipe(
-      tap((creada) => {
-        const lista = [...this.mesas(), { ...creada, codigoFormateado: this.formatearCodigoMesa(creada.numero) }];
-        this.persistirLocal(lista);
-      }),
-      catchError(() => {
-        const actual = this.mesas();
-        const nuevoId = actual.length > 0 ? Math.max(...actual.map((m) => m.idMesa)) + 1 : 1;
-        const mesaLocal: Mesa = {
-          idMesa: nuevoId,
-          numero: num,
-          codigoFormateado: this.formatearCodigoMesa(num),
-          capacidad: cap,
-          activa: Boolean(nueva.activa)
-        };
-        this.persistirLocal([...actual, mesaLocal]);
-        return of(mesaLocal);
-      })
-    );
+crearMesa(nueva: Omit<Mesa, 'idMesa'>): Observable<Mesa> {
+  const num = Number(nueva?.numero);
+  const cap = Number(nueva?.capacidad ?? 4);
+
+  const errorValidacion = this.validarDatosMesa(num, cap);
+
+  if (errorValidacion) {
+    return throwError(() => new Error(errorValidacion));
   }
 
+  return this.http.post<Mesa>(
+    API_CONFIG.endpoints.mesas,
+    nueva
+  ).pipe(
+
+    tap((creada) => {
+      const lista = [
+        ...this.mesas(),
+        {
+          ...creada,
+          codigoFormateado: this.formatearCodigoMesa(creada.numero)
+        }
+      ];
+
+      this.persistirLocal(lista);
+    }),
+
+    catchError(() => {
+      const actual = this.mesas();
+
+      const nuevoId = actual.length > 0
+        ? Math.max(...actual.map((m) => m.idMesa)) + 1
+        : 1;
+
+      const mesaLocal: Mesa = {
+        idMesa: nuevoId,
+        numero: num,
+        codigoFormateado: this.formatearCodigoMesa(num),
+        nombre: nueva.nombre || `Mesa ${num}`,
+        capacidad: cap,
+        numeroPersonas: 0,
+        estado: 'LIBRE',
+        activa: nueva.activa ?? true,
+        ocupada: false
+      };
+
+      this.persistirLocal([...actual, mesaLocal]);
+
+      return of(mesaLocal);
+    })
+  );
+}
+
+liberarMesa(idMesa: number): Observable<Mesa> {
+  return this.http.put<Mesa>(
+    `${this.apiUrl}/${idMesa}/liberar`,
+    {}
+  ).pipe(
+    tap((mesaActualizada) => {
+      const actualizadas = this.mesas().map(m =>
+        m.idMesa === idMesa
+          ? {
+              ...mesaActualizada,
+              codigoFormateado: this.formatearCodigoMesa(
+                mesaActualizada.numero
+              )
+            }
+          : m
+      );
+
+      this.persistirLocal(actualizadas);
+    })
+  );
+}
   actualizarMesa(mesa: Mesa): Observable<Mesa> {
     const num = Number(mesa?.numero);
     const cap = Number(mesa?.capacidad ?? 4);

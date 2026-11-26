@@ -22,6 +22,12 @@ public class categoriaModel {
 
     @Column(name = "descripcion", length = 150)
     private String descripcion;
+    @Column(name = "icono", length = 100)
+    private String icono;
+ 
+
+    @Column(name = "subcategoria", length = 100)
+    private String subcategoria;
 
     @Column(name = "activa", nullable = false)
     private Boolean activa = true;
@@ -62,5 +68,20 @@ public class categoriaModel {
 
     public void setActiva(Boolean activa) {
         this.activa = activa;
+    }
+       public String getIcono() {
+        return icono;
+    }
+
+    public void setIcono(String icono) {
+        this.icono = icono;
+    }
+
+    public String getSubcategoria() {
+        return subcategoria;
+    }
+
+    public void setSubcategoria(String subcategoria) {
+        this.subcategoria = subcategoria;
     }
 }

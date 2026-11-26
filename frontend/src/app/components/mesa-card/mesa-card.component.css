@@ -25,7 +25,59 @@
   background: #fff5f8;
   box-shadow: 0 8px 20px rgba(230, 115, 153, 0.28);
 }
+:host {
+  display: block;
+  width: 100%;
+}
 
+.mesa-card {
+  min-height: 140px;
+  height: 100%;
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  box-shadow: 0 5px 15px rgba(80, 45, 15, 0.06);
+}
+
+.mesa-card:hover {
+  transform: translateY(-3px);
+}
+
+.mesa-card.seleccionada {
+  border: 2px solid #f56b9d;
+  background: #fff5f8;
+}
+
+.mesa-card.ocupada {
+  background: #fff0f0;
+  cursor: not-allowed;
+}
+
+.estado-mesa {
+  margin-top: 9px;
+  padding: 5px 13px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.estado-libre {
+  background: #d9f5e3;
+  color: #168447;
+}
+
+.estado-ocupada {
+  background: #ffe0e0;
+  color: #c62828;
+}
 .mesa-tile.inactiva {
   opacity: 0.48;
   cursor: not-allowed;

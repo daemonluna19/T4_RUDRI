@@ -42,17 +42,29 @@
       <div class="aviso-box" role="alert">{{ mensajeAviso() }}</div>
     }
 
-    <section class="platos-list">
-      @for (prod of productosFiltrados(); track prod.idProducto) {
-        <app-producto-item
-          [producto]="prod"
-          [cantidadActual]="pedidoService.obtenerCantidadProductoEnCarrito(prod.idProducto)"
-          (cambiarCantidad)="actualizarCantidad($event)"
-        />
-      } @empty {
-        <p class="empty-filter">No se encontraron platos con ese filtro.</p>
-      }
-    </section>
+<section class="platos-list">
+  @for (prod of productosFiltrados(); track prod.idProducto) {
+    <div class="producto-con-imagen">
+
+      <img
+        class="producto-imagen"
+        [src]="prod.imagenUrl || '/images/productos/placeholder.jpg'"
+        [alt]="prod.nombre"
+        loading="lazy"
+        (error)="$any($event.target).src = '/images/productos/placeholder.jpg'"
+      />
+
+      <app-producto-item
+        [producto]="prod"
+        [cantidadActual]="pedidoService.obtenerCantidadProductoEnCarrito(prod.idProducto)"
+        (cambiarCantidad)="actualizarCantidad($event)"
+      />
+
+    </div>
+  } @empty {
+    <p class="empty-filter">No se encontraron platos con ese filtro.</p>
+  }
+</section>
 
     <div class="footer-continue">
       <button
