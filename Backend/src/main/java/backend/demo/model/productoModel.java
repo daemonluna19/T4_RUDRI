@@ -30,14 +30,45 @@ public class productoModel {
     )
     private categoriaModel categoria;
 
+    public String getSubcategoria() {
+    return subcategoria;
+}
+
+  public void setSubcategoria(String subcategoria) {
+    this.subcategoria = subcategoria;
+  }
+
+  public String getDescripcion() {
+    return descripcion;
+  }
+
+  public void setDescripcion(String descripcion) {
+    this.descripcion = descripcion;
+  }
+
+  public String getImagenUrl() {
+    return imagenUrl;
+  }
+
+  public void setImagenUrl(String imagenUrl) {
+    this.imagenUrl = imagenUrl;
+  }
+
     @Column(name = "nombre", length = 100, nullable = false)
     private String nombre;
+    @Column(name = "subcategoria", length = 100)
+    private String subcategoria;
+    @Column (name = "descripcion", length = 150)
+    private String descripcion;
+    
 
     @Column(name = "precio", precision = 8, scale = 2, nullable = false)
     private BigDecimal precio;
 
     @Column(name = "disponible", nullable = false)
     private Boolean disponible = true;
+    @Column (name="imagenUrl", length = 200 )
+    private String imagenUrl;
 
     // Constructor vacío
     public productoModel() {

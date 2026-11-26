@@ -130,57 +130,149 @@
 
     @if (tabActiva() === 'mesas') {
       <div class="crud-grid">
-        <section class="crud-card">
-          <h3>{{ formMesa.idMesa ? 'Editar Mesa' : 'Nueva Mesa' }}</h3>
-          <form (ngSubmit)="guardarMesa()">
-            <label for="crud-mesa-num">Número de Mesa *</label>
-            <input id="crud-mesa-num" type="number" min="1" name="numero" [(ngModel)]="formMesa.numero" required />
+      
+<section class="crud-card">
+  <h3>{{ formMesa.idMesa ? 'Editar Mesa' : 'Nueva Mesa' }}</h3>
 
-            <label for="crud-mesa-cap">Capacidad (Sillas) *</label>
-            <input id="crud-mesa-cap" type="number" min="1" max="20" name="capacidad" [(ngModel)]="formMesa.capacidad" required />
+  <form (ngSubmit)="guardarMesa()">
 
-            <label class="chk-row">
-              <input type="checkbox" name="activa" [(ngModel)]="formMesa.activa" />
-              <span>Mesa Habilitada</span>
-            </label>
+    <label for="crud-mesa-num">Número de Mesa *</label>
+    <input
+      id="crud-mesa-num"
+      type="number"
+      min="1"
+      name="numero"
+      [(ngModel)]="formMesa.numero"
+      required
+    />
 
-            <div class="btn-row">
-              <button type="submit" class="btn-pink">
-                {{ formMesa.idMesa ? 'Actualizar Mesa' : 'Crear Mesa' }}
+    <label for="crud-mesa-nombre">Nombre de Mesa</label>
+    <input
+      id="crud-mesa-nombre"
+      type="text"
+      name="nombre"
+      [(ngModel)]="formMesa.nombre"
+      placeholder="Ej. Mesa VIP"
+      maxlength="60"
+    />
+
+    <label for="crud-mesa-cap">Capacidad (Personas) *</label>
+    <input
+      id="crud-mesa-cap"
+      type="number"
+      min="1"
+      max="50"
+      name="capacidad"
+      [(ngModel)]="formMesa.capacidad"
+      required
+    />
+
+    <label class="chk-row">
+      <input
+        type="checkbox"
+        name="activa"
+        [(ngModel)]="formMesa.activa"
+      />
+      <span>Mesa Habilitada</span>
+    </label>
+
+    <div class="btn-row">
+      <button type="submit" class="btn-pink">
+        {{ formMesa.idMesa ? 'Actualizar Mesa' : 'Crear Mesa' }}
+      </button>
+
+      @if (formMesa.idMesa) {
+        <button
+          type="button"
+          class="btn-ghost"
+          (click)="limpiarFormMesa()"
+        >
+          Cancelar
+        </button>
+      }
+    </div>
+
+  </form>
+</section>
+
+
+      
+<section class="crud-card">
+  <h3>Mesas Registradas</h3>
+
+  <div class="table-scroll">
+    <table class="rudri-table">
+
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Capacidad</th>
+          <th>Personas</th>
+          <th>Familia</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (m of mesaService.mesas(); track m.idMesa) {
+          <tr>
+
+            <td>
+              <strong>
+                {{ m.codigoFormateado || ('MESA 0' + m.numero) }}
+              </strong>
+            </td>
+
+            <td>{{ m.nombre || 'Sin nombre' }}</td>
+
+            <td>{{ m.capacidad }} personas</td>
+
+            <td>{{ m.numeroPersonas }}</td>
+
+            <td>{{ m.nombre|| '-' }}</td>
+
+            <td>
+              <span
+                class="estado-mesa"
+                [class.libre]="m.estado === 'LIBRE'"
+                [class.ocupada]="m.estado === 'OCUPADA'"
+                [class.inactiva]="!m.activa"
+              >
+                {{ !m.activa ? 'Inactiva' : m.estado }}
+              </span>
+            </td>
+
+            <td class="actions-cell">
+
+              <button
+                type="button"
+                class="btn-sm"
+                (click)="editarMesa(m)"
+              >
+                Editar
               </button>
-              @if (formMesa.idMesa) {
-                <button type="button" class="btn-ghost" (click)="limpiarFormMesa()">Cancelar</button>
-              }
-            </div>
-          </form>
-        </section>
 
-        <section class="crud-card">
-          <h3>Mesas Registradas</h3>
-          <table class="rudri-table">
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Capacidad</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (m of mesaService.mesas(); track m.idMesa) {
-                <tr>
-                  <td><strong>{{ m.codigoFormateado || ('MESA 0' + m.numero) }}</strong></td>
-                  <td>{{ m.capacidad }} personas</td>
-                  <td>{{ m.activa ? 'Activa' : 'Inactiva' }}</td>
-                  <td class="actions-cell">
-                    <button type="button" class="btn-sm" (click)="editarMesa(m)">Editar</button>
-                    <button type="button" class="btn-sm danger" (click)="eliminarMesa(m.idMesa)">Eliminar</button>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </section>
+              <button
+                type="button"
+                class="btn-sm danger"
+                (click)="eliminarMesa(m.idMesa)"
+                [disabled]="m.estado === 'OCUPADA'"
+              >
+                Eliminar
+              </button>
+
+            </td>
+
+          </tr>
+        }
+      </tbody>
+
+    </table>
+  </div>
+</section>
+
       </div>
     }
 

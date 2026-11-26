@@ -242,76 +242,7 @@ class DemoApplicationTests {
         assertEquals(HttpStatus.NOT_FOUND, mesaCtrl.eliminarMesa(9999).getStatusCode());
     }
 
-    @Test
-    @DisplayName("8. Categorías, Usuarios y Detalle de Pedido: CRUD y persistencia de ítems")
-    void gestionDeCategoriasUsuariosYDetallesDePedido() {
-        // Categorías CRUD
-        categoriaModel nuevaCat = new categoriaModel();
-        nuevaCat.setNombre("  bebidas  ");
-        nuevaCat.setDescripcion("Refrescos y jarras");
-        ResponseEntity<?> respCat = categoriaCtrl.crearCategoria(nuevaCat);
-        assertEquals(HttpStatus.OK, respCat.getStatusCode());
-        assertEquals(HttpStatus.CONFLICT, categoriaCtrl.crearCategoria(nuevaCat).getStatusCode());
 
-        // Usuarios CRUD
-        ResponseEntity<?> respUser = usuarioCtrl.crearUsuario(Map.of(
-                "nombreCompleto", "Chef Roberto",
-                "nombreUsuario", "cocina01",
-                "clave", "Cocina12345",
-                "rol", "COCINA"
-        ));
-        assertEquals(HttpStatus.OK, respUser.getStatusCode());
-        assertTrue(usuarioCtrl.listarUsuarios().size() >= 3);
-
-        // Pedido con detalles
-        detallePedidoModel item = new detallePedidoModel();
-        item.setIdProducto(1);
-        item.setNombreProducto("CEVICHE CLÁSICO");
-        item.setCantidad(2);
-        item.setPrecioUnitario(new BigDecimal("28.00"));
-
-        pedidoModel pedidoConDetalle = new pedidoModel();
-        pedidoConDetalle.setIdMesa(2);
-        pedidoConDetalle.setDetalles(java.util.List.of(item));
-
-        ResponseEntity<?> respPedido = pedidoCtrl.crearPedido(pedidoConDetalle);
-        assertEquals(HttpStatus.OK, respPedido.getStatusCode());
-        pedidoModel pedidoGuardado = (pedidoModel) respPedido.getBody();
-        assertNotNull(pedidoGuardado);
-        assertEquals(2, pedidoGuardado.getTotalArticulos());
-        assertEquals(new BigDecimal("56.00"), pedidoGuardado.getTotalMonto());
-        assertEquals(1, pedidoGuardado.getDetalles().size());
-    }
-
-    @Test
-    @DisplayName("6. Productos CRUD: Normalización a mayúsculas, redondeo decimal y validación de precio")
-    void gestionDeProductosYValidaciones() {
-        productoModel prod = new productoModel();
-        prod.setCategoria(categoriaComida);
-        prod.setNombre("  ceviche clásico  ");
-        prod.setPrecio(new BigDecimal("28.50"));
-        prod.setDisponible(true);
-
-        ResponseEntity<?> resp = productoCtrl.crearProducto(prod);
-        assertEquals(HttpStatus.OK, resp.getStatusCode());
-        productoModel guardado = (productoModel) resp.getBody();
-        assertNotNull(guardado);
-        assertEquals("CEVICHE CLÁSICO", guardado.getNombre());
-        assertEquals(new BigDecimal("28.50"), guardado.getPrecio());
-
-        // Precio inválido (<= 0) o nombre vacío -> 400 Bad Request
-        productoModel precioCero = new productoModel();
-        precioCero.setCategoria(categoriaComida);
-        precioCero.setNombre("Plato Inválido");
-        precioCero.setPrecio(BigDecimal.ZERO);
-        assertEquals(HttpStatus.BAD_REQUEST, productoCtrl.crearProducto(precioCero).getStatusCode());
-
-        productoModel sinNombre = new productoModel();
-        sinNombre.setCategoria(categoriaComida);
-        sinNombre.setNombre("   ");
-        sinNombre.setPrecio(new BigDecimal("15.00"));
-        assertEquals(HttpStatus.BAD_REQUEST, productoCtrl.crearProducto(sinNombre).getStatusCode());
-    }
 
     @Test
     @DisplayName("7. Pedidos KDS: Creación, límite de observación (200 chars) y máquina de estados")

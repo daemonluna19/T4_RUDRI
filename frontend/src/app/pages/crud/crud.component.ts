@@ -36,12 +36,16 @@ export class CrudComponent {
     imagenUrl: 'https://images.unsplash.com/photo-1535399831218-d5bd36d1a6b3?auto=format&fit=crop&w=300&q=80'
   };
 
-  formMesa = {
-    idMesa: 0,
-    numero: 13,
-    capacidad: 4,
-    activa: true
-  };
+formMesa = {
+  idMesa: 0,
+  numero: 13,
+  codigoFormateado: '',
+  nombre: '',
+  capacidad: 4,
+  numeroPersonas: 0,
+  estado: 'LIBRE' as 'LIBRE' | 'OCUPADA',
+  activa: true
+};
 
   guardarProducto(): void {
     if (!this.formProducto.nombre.trim()) {
@@ -122,44 +126,66 @@ export class CrudComponent {
     };
   }
 
-  guardarMesa(): void {
-    if (this.formMesa.idMesa > 0) {
-      this.mesaService.actualizarMesa({ ...this.formMesa }).subscribe({
-        next: (m) => {
-          this.mensaje.set(`${m.codigoFormateado} actualizada.`);
-          this.limpiarFormMesa();
-        },
-        error: (err: Error) => {
-          this.mensaje.set(err.message);
-        }
-      });
-    } else {
-      this.mesaService
-        .crearMesa({
-          numero: Number(this.formMesa.numero),
-          capacidad: Number(this.formMesa.capacidad),
-          activa: this.formMesa.activa
-        })
-        .subscribe({
-          next: (m) => {
-            this.mensaje.set(`${m.codigoFormateado} creada exitosamente.`);
-            this.limpiarFormMesa();
-          },
-          error: (err: Error) => {
-            this.mensaje.set(err.message);
-          }
-        });
-    }
+guardarMesa(): void {
+
+  if (this.formMesa.idMesa > 0) {
+
+    this.mesaService.actualizarMesa({
+      ...this.formMesa
+    }).subscribe({
+
+      next: (m) => {
+        this.mensaje.set(`${m.codigoFormateado} actualizada.`);
+        this.limpiarFormMesa();
+      },
+
+      error: (err: Error) => {
+        this.mensaje.set(err.message);
+      }
+
+    });
+
+  } else {
+
+    this.mesaService.crearMesa({
+
+      numero: Number(this.formMesa.numero),
+      codigoFormateado: this.formMesa.codigoFormateado,
+      nombre: this.formMesa.nombre || `Mesa ${this.formMesa.numero}`,
+      capacidad: Number(this.formMesa.capacidad),
+      numeroPersonas: 0,
+      estado: 'LIBRE',
+      activa: this.formMesa.activa
+
+    }).subscribe({
+
+      next: (m) => {
+        this.mensaje.set(`${m.codigoFormateado} creada exitosamente.`);
+        this.limpiarFormMesa();
+      },
+
+      error: (err: Error) => {
+        this.mensaje.set(err.message);
+      }
+
+    });
+
   }
+}
 
   editarMesa(m: Mesa): void {
-    this.formMesa = {
-      idMesa: m.idMesa,
-      numero: m.numero,
-      capacidad: m.capacidad,
-      activa: m.activa
-    };
-  }
+  this.formMesa = {
+    idMesa: m.idMesa,
+    numero: m.numero,
+    codigoFormateado: m.codigoFormateado ?? '',
+    nombre: m.nombre ?? '',
+    capacidad: m.capacidad,
+    numeroPersonas: m.numeroPersonas ?? 0,
+    estado: m.estado,
+    activa: m.activa
+  };
+}
+  
 
   eliminarMesa(idMesa: number): void {
     this.mesaService.eliminarMesa(idMesa).subscribe(() => {
@@ -171,7 +197,11 @@ export class CrudComponent {
     this.formMesa = {
       idMesa: 0,
       numero: this.mesaService.mesas().length + 1,
+      codigoFormateado: '',
+      nombre: '',
       capacidad: 4,
+      numeroPersonas: 0,
+      estado: 'LIBRE',
       activa: true
     };
   }

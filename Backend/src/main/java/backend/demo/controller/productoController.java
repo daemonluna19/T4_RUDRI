@@ -1,7 +1,10 @@
 package backend.demo.controller;
 
+import backend.demo.dto.ProductoResponseDTO;
 import backend.demo.model.productoModel;
 import backend.demo.repository.productoRepository;
+import backend.demo.services.ProductoService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,77 +19,54 @@ import java.util.Optional;
 @CrossOrigin(origins = "*")
 public class productoController {
 
-    private final productoRepository productoRepo;
+    private final ProductoService ProductoService;
 
-    public productoController(productoRepository productoRepo) {
-        this.productoRepo = productoRepo;
+    public productoController(ProductoService productoService) {
+        this.ProductoService = productoService;
     }
 
-    @GetMapping
-    public List<productoModel> listarProductos() {
-        return productoRepo.findAll();
-    }
 
+@GetMapping
+public List<ProductoResponseDTO> listarDisponibles() {
+    return ProductoService.listarDisponibles();
+}
+
+@GetMapping("/categoria/{idCategoria}")
+public List<ProductoResponseDTO> listarPorCategoria(
+        @PathVariable Integer idCategoria) {
+    return ProductoService.listarPorCategoria(idCategoria);
+}
+
+@GetMapping("/{id}")
+public ProductoResponseDTO obtenerPorId(@PathVariable Integer id) {
+    return ProductoService.obtenerPorId(id);
+}
+    // POST: registrar producto
     @PostMapping
-    public ResponseEntity<?> crearProducto(@RequestBody(required = false) productoModel nuevo) {
-        if (nuevo == null || nuevo.getNombre() == null || nuevo.getNombre().isBlank()) {
-            return ResponseEntity.badRequest().body(
-                Map.of("mensaje", "El nombre del producto es obligatorio.")
-            );
-        }
-        if (nuevo.getPrecio() == null || nuevo.getPrecio().compareTo(BigDecimal.ZERO) <= 0) {
-            return ResponseEntity.badRequest().body(
-                Map.of("mensaje", "El precio del producto debe ser mayor a cero.")
-            );
-        }
+    public productoModel registrar(
+            @RequestBody productoModel producto) {
 
-        nuevo.setNombre(nuevo.getNombre().trim().toUpperCase());
-        nuevo.setPrecio(nuevo.getPrecio().setScale(2, RoundingMode.HALF_UP));
-        if (nuevo.getDisponible() == null) {
-            nuevo.setDisponible(true);
-        }
-
-        return ResponseEntity.ok(productoRepo.save(nuevo));
+        return ProductoService.registrar(producto);
     }
 
+    // PUT: actualizar producto
     @PutMapping("/{id}")
-    public ResponseEntity<?> actualizarProducto(
+    public productoModel actualizar(
             @PathVariable Integer id,
-            @RequestBody(required = false) productoModel datos) {
-        if (datos == null || datos.getNombre() == null || datos.getNombre().isBlank()) {
-            return ResponseEntity.badRequest().body(
-                Map.of("mensaje", "El nombre del producto es obligatorio.")
-            );
-        }
-        if (datos.getPrecio() == null || datos.getPrecio().compareTo(BigDecimal.ZERO) <= 0) {
-            return ResponseEntity.badRequest().body(
-                Map.of("mensaje", "El precio del producto debe ser mayor a cero.")
-            );
-        }
+            @RequestBody productoModel producto) {
 
-        Optional<productoModel> existenteOpt = productoRepo.findById(id);
-        if (existenteOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        productoModel existente = existenteOpt.get();
-        existente.setNombre(datos.getNombre().trim().toUpperCase());
-        existente.setPrecio(datos.getPrecio().setScale(2, RoundingMode.HALF_UP));
-        if (datos.getDisponible() != null) {
-            existente.setDisponible(datos.getDisponible());
-        }
-        if (datos.getCategoria() != null) {
-            existente.setCategoria(datos.getCategoria());
-        }
-        return ResponseEntity.ok(productoRepo.save(existente));
+        return ProductoService.actualizar(id, producto);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> eliminarProducto(@PathVariable Integer id) {
-        if (!productoRepo.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        productoRepo.deleteById(id);
-        return ResponseEntity.noContent().build();
+    // PATCH: desactivar producto
+    @PatchMapping("/{id}/desactivar")
+    public productoModel desactivar(@PathVariable Integer id) {
+        return ProductoService.desactivar(id);
+    }
+
+    // PATCH: activar producto
+    @PatchMapping("/{id}/activar")
+    public productoModel activar(@PathVariable Integer id) {
+        return ProductoService.activar(id);
     }
 }

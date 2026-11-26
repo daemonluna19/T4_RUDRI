@@ -27,7 +27,8 @@ public class mesaModel {
     private Integer capacidad;
       @Column(name = "numero_personas")
     private Integer numeroPersonas = 0;
-
+@Column(name = "nombre_familia", length = 60)
+private String nombreFamilia;
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false)
     private EstadoMesa estado = EstadoMesa.LIBRE;
@@ -40,6 +41,14 @@ public class mesaModel {
     }
 
     // Getters y Setters
+
+    public String getNombreFamilia() {
+        return nombreFamilia;
+    }
+
+    public void setNombreFamilia(String nombreFamilia) {
+        this.nombreFamilia = nombreFamilia;
+    }
 
     public Integer getIdMesa() {
         return idMesa;

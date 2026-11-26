@@ -8,10 +8,187 @@
       @for (mesa of mesaService.mesas(); track mesa.idMesa) {
         <app-mesa-card
           [mesa]="mesa"
-          [seleccionada]="pedidoService.mesaSeleccionada()?.idMesa === mesa.idMesa"
+          [seleccionada]="mesaSeleccionada()?.idMesa === mesa.idMesa"
           (seleccionar)="elegirMesa($event)"
         />
       }
     </div>
   </main>
+
+  <!-- VENTANA EMERGENTE -->
+  <div
+    class="modal-overlay"
+    *ngIf="mostrarFormulario()"
+    (click)="cancelarSeleccion()"
+  >
+    <section
+      class="modal-contenido"
+      (click)="$event.stopPropagation()"
+    >
+
+      <!-- CABECERA -->
+      <div class="modal-cabecera">
+        <div class="modal-icono">
+          <span>♧</span>
+        </div>
+
+        <button
+          type="button"
+          class="cerrar-modal"
+          (click)="cancelarSeleccion()"
+          [disabled]="guardando() || liberando()"
+        >
+          ×
+        </button>
+      </div>
+
+      <!-- SI LA MESA ESTÁ OCUPADA -->
+      <ng-container *ngIf="mesaSeleccionada()?.estado === 'OCUPADA'; else formularioLibre">
+
+        <h2>Mesa ocupada</h2>
+
+        <p class="modal-descripcion">
+          Esta mesa se encuentra actualmente en servicio.
+        </p>
+
+        <div class="resumen-mesa">
+          <div class="resumen-fila">
+            <span>Mesa</span>
+            <strong>
+              {{ mesaSeleccionada()?.numero }}
+            </strong>
+          </div>
+
+          <div class="resumen-fila">
+            <span>Estado</span>
+            <strong class="texto-ocupada">OCUPADA</strong>
+          </div>
+
+          <div class="resumen-fila">
+            <span>Familia</span>
+            <strong>
+              {{ mesaSeleccionada()?.nombreFamilia || 'Sin nombre registrado' }}
+            </strong>
+          </div>
+
+          <div class="resumen-fila">
+            <span>Personas</span>
+            <strong>
+              {{ mesaSeleccionada()?.numeroPersonas }}
+              / {{ mesaSeleccionada()?.capacidad }}
+            </strong>
+          </div>
+        </div>
+
+        <p class="aviso-liberar">
+          Al liberar la mesa, quedará disponible para nuevos clientes.
+        </p>
+
+        <div class="modal-acciones">
+          <button
+            type="button"
+            class="btn-secundario"
+            (click)="cancelarSeleccion()"
+            [disabled]="liberando()"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="button"
+            class="btn-liberar"
+            (click)="liberarMesa()"
+            [disabled]="liberando()"
+          >
+            {{ liberando() ? 'Liberando...' : 'Liberar mesa' }}
+          </button>
+        </div>
+
+      </ng-container>
+
+      <!-- SI LA MESA ESTÁ LIBRE -->
+      <ng-template #formularioLibre>
+
+        <h2>Registrar ocupación</h2>
+
+        <p class="modal-descripcion">
+          Registra los datos de los clientes para comenzar el servicio.
+        </p>
+
+        <div class="resumen-mesa">
+          <div class="resumen-fila">
+            <span>Mesa seleccionada</span>
+            <strong>
+              Mesa {{ mesaSeleccionada()?.numero }}
+            </strong>
+          </div>
+
+          <div class="resumen-fila">
+            <span>Capacidad máxima</span>
+            <strong>
+              {{ mesaSeleccionada()?.capacidad }} personas
+            </strong>
+          </div>
+        </div>
+
+        <form (ngSubmit)="confirmarOcupacion()">
+
+          <div class="campo">
+            <label for="nombreFamilia">Nombre de la familia</label>
+
+            <input
+              id="nombreFamilia"
+              type="text"
+              placeholder="Ej. Familia García"
+              [ngModel]="nombreFamilia()"
+              (ngModelChange)="nombreFamilia.set($event)"
+              name="nombreFamilia"
+              required
+              maxlength="60"
+            />
+          </div>
+
+          <div class="campo">
+            <label for="numeroPersonas">Cantidad de personas</label>
+
+            <input
+              id="numeroPersonas"
+              type="number"
+              [ngModel]="numeroPersonas()"
+              (ngModelChange)="numeroPersonas.set(+$event)"
+              name="numeroPersonas"
+              min="1"
+              [max]="mesaSeleccionada()?.capacidad ?? 1"
+              required
+            />
+          </div>
+
+          <p class="mensaje-error" *ngIf="mensajeError()">
+            {{ mensajeError() }}
+          </p>
+
+          <div class="modal-acciones">
+            <button
+              type="button"
+              class="btn-secundario"
+              (click)="cancelarSeleccion()"
+              [disabled]="guardando()"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              class="btn-confirmar"
+              [disabled]="guardando()"
+            >
+              {{ guardando() ? 'Registrando...' : 'Confirmar ocupación' }}
+            </button>
+          </div>
+
+        </form>
+      </ng-template>
+
+    </section>
+  </div>
 </div>
